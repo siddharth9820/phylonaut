@@ -20,6 +20,7 @@ if(ENABLE_PROFILING)
   SET(Boost_USE_STATIC_RUNTIME OFF)
 
 else()
+
   ADD_LIBRARY(phylonaut_static STATIC ${SOURCES})
   SET_TARGET_PROPERTIES(phylonaut_static PROPERTIES OUTPUT_NAME phylonaut)  	
   install(TARGETS phylonaut_static
@@ -28,6 +29,7 @@ else()
 
 
 endif(ENABLE_PROFILING)
+INCLUDE_DIRECTORIES("boost/" )
 
 
 ADD_LIBRARY(phylonaut_shared SHARED ${SOURCES} )
