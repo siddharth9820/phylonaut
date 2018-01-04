@@ -3,7 +3,11 @@
 
 #include "Analysis.hpp"
 
+#ifdef __linux__
 typedef __float128 count_type;
+#else
+typedef long double count_type;
+#endif
 
 class CountTreesAnalysis : public Analysis {
 public:
