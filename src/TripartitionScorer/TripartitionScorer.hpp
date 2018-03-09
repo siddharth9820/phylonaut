@@ -9,7 +9,7 @@
 #include <util/Logger.hpp>
 #include <Quartet.hpp>
 
-class Config;
+struct Config;
 
 using namespace std;
 

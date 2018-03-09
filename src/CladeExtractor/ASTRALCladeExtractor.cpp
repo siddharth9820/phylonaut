@@ -30,12 +30,24 @@ string findAstralJar() {
   return "";
 }
 
+#if (_WIN32)
 
+#include <io.h>
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#define mkstemp _mktemp
+#define popen _popen
+#endif
 string remapped_treefile(istream& input, TaxonSet& ts) {
   string line;
   //  ifstream ifile(input);
-
+#if _WIN32
+  char name[] = "fileXXXXXX";
+#else
   char name[] = "/tmp/fileXXXXXX";
+#endif
+
   mkstemp(name);
 
   ofstream of(name);
@@ -51,8 +63,11 @@ string remapped_treefile(istream& input, TaxonSet& ts) {
 
 unordered_set<Clade> ASTRALCladeExtractor::extract(TaxonSet& ts) {
   stringstream clade_stream;
+#ifdef _WIN32
+  string s = "java -jar " + astralpath + " -i " + remapped_treefile(gtfile, ts) + " -k searchspace_norun -o NUL";
+#else
   string s = "java -jar " + astralpath + " -i " + remapped_treefile(gtfile, ts) + " -k searchspace_norun -o /dev/null";
-
+#endif
   if (exact)
     s += " -x ";
   if (limited)
@@ -86,8 +101,10 @@ unordered_set<Clade> ASTRALCladeExtractor::extract(TaxonSet& ts) {
 
   while (!cladestream_mapped.eof()) {
     getline(cladestream_mapped, line);
-    string s = unmap_clade_names(line, ts);
-    clades.insert(Clade(ts, s));
+    string clade_s = unmap_clade_names(line, ts);
+	DEBUG << clade_s << endl;
+	if (clade_s.size())
+		clades.insert(Clade(ts, clade_s));
   }
 
 
