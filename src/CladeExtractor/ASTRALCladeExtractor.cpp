@@ -5,7 +5,11 @@
 #include <fstream>
 #include <cassert>
 #include <sstream>
+#ifdef _WIN32
+#include "dirent.h"
+#else
 #include <dirent.h>
+#endif
 
 #include "whereami++.hpp"
 
