@@ -47,8 +47,12 @@ void complete_unordered(Bipartition& bp, vector<Bipartition>& bipartitions, unor
         c_bp.a2.add(tax);
       }
     }
-    completed.insert(c_bp.a1);
-    completed.insert(c_bp.a2);
+    DEBUG << c_bp.a1.size() + c_bp.a2.size() << endl;
+
+    if (c_bp.a1.size())
+      completed.insert(c_bp.a1);
+    if (c_bp.a2.size())
+      completed.insert(c_bp.a2);
 }
 
 unordered_set<Clade> GLOBExtractor::extract(TaxonSet& ts) {
@@ -76,5 +80,16 @@ unordered_set<Clade> GLOBExtractor::extract(TaxonSet& ts) {
     complete_unordered(bp, bipartitions, completed, ts);
   }
   INFO << completed.size() << " clades completed" << endl;
+
+  for (Taxon tax : ts.taxa_bs) {
+    Clade c(ts);
+    c.add(tax);
+    completed.insert(c);
+    completed.insert(c.complement());
+  }
+
+  for (const Clade& bp : completed) {
+    DEBUG << bp.str () << endl;
+  }
   return completed;
 }
