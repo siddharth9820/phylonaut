@@ -27,7 +27,7 @@ namespace std {
 
 class TripartitionScorer {
 private:
-  const TaxonSet* ts_;
+  TaxonSet* ts_;
   
   //Virtual methods
   //Do all the preprocessing
@@ -57,7 +57,7 @@ public:
 
   TripartitionScorer () : ts_(NULL) {}
   
-  void set_ts(const TaxonSet& newts) {
+  void set_ts(TaxonSet& newts) {
     DEBUG << clades.size() << endl;
     ts_ = &newts;
   }
@@ -65,7 +65,7 @@ public:
   size_t clades_size() { return clades.size(); }
   
 protected:
-  const TaxonSet& ts() const {return *ts_;}
+  TaxonSet& ts() const {return *ts_;}
 
   
 private:
