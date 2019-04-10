@@ -81,17 +81,17 @@ string ConsensusTreeAnalysis::analyze(TaxonSet& ts, vector<Clade>& clades, Tripa
   
   vector<Clade> good_clades;
   for (Clade& c : clades) {
-    appearances[c.taxa] = counts[c.taxa] * counts[c.complement().taxa];
+    appearances[c.get_taxa()] = counts[c.get_taxa()] * counts[c.complement().get_taxa()];
     
-    if (c.taxa == ts.taxa_bs || (appearances[c.taxa] > (level * total_trees) || (level==1.0 && appearances[c.taxa] == (total_trees)) || (level<=0))) {
-      DEBUG << (double)appearances[c.taxa] << "\t" << (double)total_trees << endl;
-      if (in_optimal.count(c.taxa))
+    if (c.get_taxa() == ts.taxa_bs || (appearances[c.get_taxa()] > (level * total_trees) || (level==1.0 && appearances[c.get_taxa()] == (total_trees)) || (level<=0))) {
+      DEBUG << (double)appearances[c.get_taxa()] << "\t" << (double)total_trees << endl;
+      if (in_optimal.count(c.get_taxa()))
 	  good_clades.push_back(c);
     }
   }  
 
  
-  sort(good_clades.begin(), good_clades.end(), [ & ](const Clade& a, const Clade& b){ return appearances[a.taxa] > appearances[b.taxa]; });
+  sort(good_clades.begin(), good_clades.end(), [ & ](const Clade& a, const Clade& b){ return appearances[a.get_taxa()] > appearances[b.get_taxa()]; });
   DEBUG << "Found " << good_clades.size() << " clades that appear in at least " << level << " trees" << endl;
   
   vector<Clade> compatible = compatible_clades(good_clades);
@@ -103,8 +103,8 @@ string ConsensusTreeAnalysis::analyze(TaxonSet& ts, vector<Clade>& clades, Tripa
   unordered_map<clade_bitset, vector<Clade> > kids;  
 
   for (Clade& c : compatible ) {
-    kids[c.taxa] = children(c, compatible);
-    DEBUG << c.size() << "\t" << kids[c.taxa].size() << endl;
+    kids[c.get_taxa()] = children(c, compatible);
+    DEBUG << c.size() << "\t" << kids[c.get_taxa()].size() << endl;
   }
 
   sort(compatible.begin(), compatible.end(), [ & ](const Clade& a, const Clade& b){ return a.size() < b.size(); });    
@@ -115,13 +115,13 @@ string ConsensusTreeAnalysis::analyze(TaxonSet& ts, vector<Clade>& clades, Tripa
     stringstream ss;
 
     if (c.size() == 1) {
-      newicks[c.taxa] = ts[*c.begin()];
+      newicks[c.get_taxa()] = ts[*c.begin()];
       continue;
     }
 
-    double support = (double)(appearances[c.taxa]/total_trees);
+    double support = (double)(appearances[c.get_taxa()]/total_trees);
 
-    DEBUG << c.str() << "\t" << support << "\t" << kids[c.taxa].size() << endl;
+    DEBUG << c.str() << "\t" << support << "\t" << kids[c.get_taxa()].size() << endl;
     
     if (c.size() == 2) {
       
@@ -130,20 +130,20 @@ string ConsensusTreeAnalysis::analyze(TaxonSet& ts, vector<Clade>& clades, Tripa
 	tv.push_back(t);
       }
       ss << "(" << ts[tv[0]] << "," << ts[tv[1]] << "):" << support;
-      newicks[c.taxa] = ss.str();
+      newicks[c.get_taxa()] = ss.str();
       continue;
     }
     
     ss << "(";
     bool started=false;
-    for (auto& k : kids[c.taxa]) {
+    for (auto& k : kids[c.get_taxa()]) {
       if (started)
 	ss << ",";
       started=true;
-      ss << newicks[k.taxa];      
+      ss << newicks[k.get_taxa()];      
     }
     ss << ")";
-    newicks[c.taxa] = ss.str();
+    newicks[c.get_taxa()] = ss.str();
   }
 
   return newicks[ts.taxa_bs] + ";";

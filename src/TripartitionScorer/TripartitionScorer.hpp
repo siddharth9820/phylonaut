@@ -27,6 +27,8 @@ namespace std {
 
 class TripartitionScorer {
 private:
+  const TaxonSet* ts_;
+  
   //Virtual methods
   //Do all the preprocessing
   virtual void setup(Config& conf, vector<Clade>& clades) {};
@@ -50,20 +52,20 @@ public:
   //used internally
   void init(Config& conf);
   
-  vector<pair<clade_bitset, clade_bitset> >& get_subclades(Clade& clade);
-  vector<pair<clade_bitset, clade_bitset> >& get_subclades(clade_bitset& clade);    
+  vector<pair<clade_bitset, clade_bitset> >& get_subclades(const Clade& clade);
+  vector<pair<clade_bitset, clade_bitset> >& get_subclades(const clade_bitset& clade);    
 
-  TripartitionScorer () : ts(*(new TaxonSet(0))) {}
+  TripartitionScorer () : ts_(NULL) {}
   
-  void set_ts(TaxonSet& ts_) {
+  void set_ts(const TaxonSet& newts) {
     DEBUG << clades.size() << endl;
-    ts = ts_;
+    ts_ = &newts;
   }
 
   size_t clades_size() { return clades.size(); }
   
 protected:
-  TaxonSet& ts;
+  const TaxonSet& ts() const {return *ts_;}
 
   
 private:

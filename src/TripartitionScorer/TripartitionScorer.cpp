@@ -22,7 +22,7 @@ double TripartitionScorer::get_score(int clade_index) {
 }
 
 double TripartitionScorer::get_score(Clade& clade) {
-  return get_score(clade, clade_indices[clade.taxa]);
+  return get_score(clade, clade_indices[clade.get_taxa()]);
 }
 
 double TripartitionScorer::get_score(Clade& clade, int clade_index) {
@@ -36,7 +36,7 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
   }
 
   if (clade.size() == 1) {   
-    Clade eclade (ts);
+    Clade eclade (ts());
     set_score(clade_index, 0, clade, eclade);
     return 0;
   }     
@@ -47,17 +47,17 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
     if (subclade.size() >= clade.size() || subclade.size() == 0 || !clade.contains(subclade)  )
       continue;
     
-    Tripartition tp(ts, clade, subclade);
+    Tripartition tp(ts(), clade, subclade);
     
-    if (clade_indices.count(tp.a1.taxa) == 0 || clade_indices.count(tp.a2.taxa) == 0)
+    if (clade_indices.count(tp.a1.get_taxa()) == 0 || clade_indices.count(tp.a2.get_taxa()) == 0)
       continue;
     
     double current = score(tp)						\
-      + get_score(tp.a1, clade_indices[tp.a1.taxa]) + get_score(tp.a2, clade_indices[tp.a2.taxa]);
+      + get_score(tp.a1, clade_indices[tp.a1.get_taxa()]) + get_score(tp.a2, clade_indices[tp.a2.get_taxa()]);
 
     if (current == value) {
-      if (tp.a1.taxa.ffs() < tp.a2.taxa.ffs())
-	subclades[clade_index].push_back(make_pair(tp.a1.taxa, tp.a2.taxa));
+      if (tp.a1.get_taxa().ffs() < tp.a2.get_taxa().ffs())
+	subclades[clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
     }
     if (std::isnan(value) || better(current, value) ) {
       value = current;
@@ -75,23 +75,23 @@ void TripartitionScorer::set_score(size_t clade_index, double score, Clade& a1, 
   subclades[clade_index].clear();
   scores[clade_index] = score;
   finished[clade_index] = 1;
-  if (a1.taxa.ffs() < a2.taxa.ffs())
-    subclades[clade_index].push_back(make_pair(a1.taxa, a2.taxa));
+  if (a1.get_taxa().ffs() < a2.get_taxa().ffs())
+    subclades[clade_index].push_back(make_pair(a1.get_taxa(), a2.get_taxa()));
   
   if (score_mat) {
-    (*score_mat)[clade_index][clade_indices[a1.taxa]] = score;
-    (*score_mat)[clade_index][clade_indices[a2.taxa]] = score;
+    (*score_mat)[clade_index][clade_indices[a1.get_taxa()]] = score;
+    (*score_mat)[clade_index][clade_indices[a2.get_taxa()]] = score;
   }  
 
 }
 
-vector<pair<clade_bitset, clade_bitset>>& TripartitionScorer::get_subclades(Clade& clade) {
-  return get_subclades(clade.taxa);
+vector<pair<clade_bitset, clade_bitset>>& TripartitionScorer::get_subclades(const Clade& clade) {
+  return get_subclades(clade.get_taxa());
 }
   
-vector<pair<clade_bitset, clade_bitset>>& TripartitionScorer::get_subclades(clade_bitset& clade) {
+vector<pair<clade_bitset, clade_bitset>>& TripartitionScorer::get_subclades(const clade_bitset& clade) {
   if(clade_indices.count(clade) == 0){
-    Clade c(ts, clade);
+    Clade c(ts(), clade);
     ERR << c.str() << " doesn't have subclades!" << endl;
     assert(false);
   }
@@ -114,8 +114,8 @@ void TripartitionScorer::init(Config& conf) {
     clades.push_back(c);
        
   
-  for (int i = 0; i < clades.size(); i++) {
-    clade_indices[clades[i].taxa] = i;
+  for (size_t i = 0; i < clades.size(); i++) {
+    clade_indices[clades[i].get_taxa()] = i;
   }
 
   if (conf.matrix) {
@@ -133,7 +133,7 @@ void TripartitionScorer::init(Config& conf) {
   scores.resize(clades.size());
   finished.resize(clades.size());
 
-  for (int i = 0; i < clades.size(); i++) {
+  for (size_t i = 0; i < clades.size(); i++) {
     finished[i] = 0;
   }
   

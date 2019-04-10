@@ -17,7 +17,7 @@ Bipartition compatible(Bipartition& b1, Bipartition&  b2) {
       return Bipartition(b1_left_fail, b1_right_fail);
     }
   }
-  return Bipartition(Clade(b1.a1.ts), Clade(b1.a1.ts));
+  return Bipartition(Clade(b1.a1.ts()), Clade(b1.a1.ts()));
 
 }
 

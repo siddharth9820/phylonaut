@@ -13,10 +13,10 @@ unordered_map<clade_bitset, count_type> CountTreesAnalysis::run(TaxonSet& ts, ve
   unordered_map<clade_bitset, count_type> counts(clades.size());
 
   for (Clade& c : clades) {
-    vector<pair<clade_bitset, clade_bitset> >& subclades_list = tps.get_subclades(c.taxa);
+    vector<pair<clade_bitset, clade_bitset> >& subclades_list = tps.get_subclades(c.get_taxa());
 
     if (c.size() <= 2 ) {
-      counts[c.taxa] = 1;
+      counts[c.get_taxa()] = 1;
       continue;
     }
     
@@ -25,12 +25,12 @@ unordered_map<clade_bitset, count_type> CountTreesAnalysis::run(TaxonSet& ts, ve
     for (auto& subclades : subclades_list) {      
       Clade c1(ts, subclades.first);
       Clade c2(ts, subclades.second);
-      count += counts.at(c1.taxa) * counts.at(c2.taxa);
+      count += counts.at(c1.get_taxa()) * counts.at(c2.get_taxa());
     }
     
-    counts[c.taxa] = count;
+    counts[c.get_taxa()] = count;
    
-    DEBUG << c.size() << "\t" << (double)counts[c.taxa] << endl;
+    DEBUG << c.size() << "\t" << (double)counts[c.get_taxa()] << endl;
   }
   
   return counts;
