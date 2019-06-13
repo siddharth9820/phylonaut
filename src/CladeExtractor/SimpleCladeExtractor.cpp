@@ -20,7 +20,15 @@ unordered_set<Clade> SimpleCladeExtractor::extract(TaxonSet& ts) {
     Clade c(ts, t);
     clades.insert(c);
   }
-  
+  vector<Clade> complements;
+  for (const Clade& c : clades) {
+    if (clades.count(c.complement()) == 0) {
+      complements.push_back(c.complement());
+    }
+  }
+  for (const Clade& c : complements) {
+    clades.insert(c);
+  }
   return clades;
   
 }
