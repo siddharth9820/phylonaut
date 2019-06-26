@@ -105,6 +105,10 @@ unordered_set<Clade> ASTRALCladeExtractor::extract(TaxonSet& ts) {
 
   while (!cladestream_mapped.eof()) {
     getline(cladestream_mapped, line);
+    DEBUG << line << endl;
+    if (line[0] != '{') {
+      continue;
+    }
     string clade_s = unmap_clade_names(line, ts);
 	DEBUG << clade_s << endl;
 	if (clade_s.size())
