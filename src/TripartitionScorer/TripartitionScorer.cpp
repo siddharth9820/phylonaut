@@ -26,7 +26,6 @@ double TripartitionScorer::get_score(Clade& clade) {
 }
 
 double TripartitionScorer::get_score(Clade& clade, int clade_index) {
-	DEBUG << "SCORING TRIPARTITION " << clade_index << endl;
   double value = (double)nan("");
 
   
@@ -34,6 +33,7 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
   if(finished[clade_index]){
     return scores[clade_index];
   }
+  DEBUG << "SCORING TRIPARTITION " << clade_index << endl;
 
   if (clade.size() == 1) {   
     Clade eclade (ts());

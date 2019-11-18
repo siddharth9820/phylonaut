@@ -142,7 +142,7 @@ string ConsensusTreeAnalysis::analyze(TaxonSet& ts, vector<Clade>& clades, Tripa
       started=true;
       ss << newicks[k.get_taxa()];      
     }
-    ss << ")";
+    ss << "):" << support;
     newicks[c.get_taxa()] = ss.str();
   }
 
