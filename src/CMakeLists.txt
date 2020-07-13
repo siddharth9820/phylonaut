@@ -8,6 +8,8 @@ add_definitions(/std:c++14)
 INCLUDE_DIRECTORIES("C:/Users/pranjal/src/phylokit/install/x64-Release/include")
 else()
 add_definitions(-std=c++14 -g -O3 -Wall)
+include_directories("../../install/include")
+link_directories("../../install/lib")
 endif()
 
 option(ENABLE_PROFILING
