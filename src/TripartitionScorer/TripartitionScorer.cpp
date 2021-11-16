@@ -7,7 +7,8 @@
 #include <limits>
 #include <fstream>
 #include <cmath>
-
+#include <omp.h>
+#include <iostream>
 
 bool TripartitionScorer::better(double newscore, double oldscore) {
   return newscore < oldscore;
@@ -121,15 +122,21 @@ void TripartitionScorer::init(Config& conf) {
   if (conf.matrix) {
     DEBUG << "Making score matrix" << endl;
     score_mat = new twod_mat(boost::extents[clades.size()][clades.size()]);
+   
+    double start = omp_get_wtime(); 
+    #pragma omp parallel for collapse(2)
     for (size_t i = 0; i < clades.size(); i++) {
       for (size_t j = 0; j < clades.size(); j++) {
 	(*score_mat)[i][j] = (double)nan("");
       }
     }
+    double end = omp_get_wtime();
+    std::cout << "Time to make score_mat is " << end-start << " seconds with " << omp_get_max_threads() << " threads" << std::endl;
   } else{
+    std::cout << "not building matrix" << std::endl;
     score_mat = 0;
   }
-
+	
   scores.resize(clades.size());
   finished.resize(clades.size());
 

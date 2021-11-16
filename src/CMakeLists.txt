@@ -7,9 +7,10 @@ if(WIN32)
 add_definitions(/std:c++14)
 INCLUDE_DIRECTORIES("C:/Users/pranjal/src/phylokit/install/x64-Release/include")
 else()
-add_definitions(-std=c++14 -g -O3 -Wall)
+add_definitions(-std=c++14 -g -O3 -Wall -fopenmp)
 include_directories("../../install/include")
 link_directories("../../install/lib")
+
 endif()
 
 option(ENABLE_PROFILING
@@ -46,8 +47,9 @@ endif()
 if(NOT(BUILD_STATIC))
 ADD_LIBRARY(phylonaut_shared SHARED ${SOURCES} )
 
-SET_TARGET_PROPERTIES(phylonaut_shared PROPERTIES OUTPUT_NAME phylonaut) 
-TARGET_LINK_LIBRARIES(phylonaut_shared phylokit)
+SET_TARGET_PROPERTIES(phylonaut_shared PROPERTIES OUTPUT_NAME phylonaut)
+find_package(OpenMP REQUIRED)
+TARGET_LINK_LIBRARIES(phylonaut_shared phylokit OpenMP::OpenMP_CXX)
 install(TARGETS phylonaut_shared
 		DESTINATION lib)
 		endif()
