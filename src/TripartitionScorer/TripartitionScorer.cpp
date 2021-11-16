@@ -9,6 +9,8 @@
 #include <cmath>
 #include <omp.h>
 #include <iostream>
+#include <assert.h>
+#include <omp.h>
 
 bool TripartitionScorer::better(double newscore, double oldscore) {
   return newscore < oldscore;
@@ -29,8 +31,6 @@ double TripartitionScorer::get_score(Clade& clade) {
 double TripartitionScorer::get_score(Clade& clade, int clade_index) {
   double value = (double)nan("");
 
-  
-  
   if(finished[clade_index]){
     return scores[clade_index];
   }
@@ -38,13 +38,20 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
 
   if (clade.size() == 1) {   
     Clade eclade (ts());
-    set_score(clade_index, 0, clade, eclade);
+    set_score(clade_index, 0);
+
+    if (clade.get_taxa().ffs() < eclade.get_taxa().ffs())
+      subclades[clade_index].push_back(make_pair(clade.get_taxa(), eclade.get_taxa()));
+    
     return 0;
   }     
-  
+ 
+  int thread_num = omp_get_thread_num();
+  vector<double> per_thread_values(omp_get_max_threads());
+  #pragma omp parallel for reduction(min:value)  
   for (size_t i = 0; i < clades.size(); i++) {
     Clade& subclade = clades[i];
-    
+
     if (subclade.size() >= clade.size() || subclade.size() == 0 || !clade.contains(subclade)  )
       continue;
     
@@ -52,37 +59,49 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
     
     if (clade_indices.count(tp.a1.get_taxa()) == 0 || clade_indices.count(tp.a2.get_taxa()) == 0)
       continue;
-    
+   
+    //we should remove these asserts once we are certain...
+    assert (finished[clade_indices[tp.a1.get_taxa()]]);
+    assert (finished[clade_indices[tp.a2.get_taxa()]]);
+
     double current = score(tp)						\
-      + get_score(tp.a1, clade_indices[tp.a1.get_taxa()]) + get_score(tp.a2, clade_indices[tp.a2.get_taxa()]);
+      + scores[clade_indices[tp.a1.get_taxa()]] + scores[clade_indices[tp.a2.get_taxa()]];
 
     if (current == value) {
       if (tp.a1.get_taxa().ffs() < tp.a2.get_taxa().ffs())
-	subclades[clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
+	per_thread_subclades[thread_num][clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
     }
-    if (std::isnan(value) || better(current, value) ) {
+    if (std::isnan(value) || better(current, value) ) { //probably the isnan does not matter now since openmp initializes value to DOUBLE_MAX
       value = current;
-      set_score(clade_index, value, tp.a1, tp.a2);
+      per_thread_values[thread_num] = current;
+      //set_score(clade_index, value, tp.a1, tp.a2);
+      per_thread_subclades[thread_num][clade_index].clear();
+      if (tp.a1.get_taxa().ffs() < tp.a2.get_taxa().ffs())
+        per_thread_subclades[thread_num][clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
     }
-    
-    
   }
+
+  for(int i=0; i < omp_get_max_threads(); i++)  
+     if (per_thread_values[i] == value) 
+       subclades[clade_index].insert(subclades[clade_index].end(), per_thread_subclades[thread_num][clade_index].begin(), per_thread_subclades[thread_num][clade_index].end());  
+  
+  set_score(clade_index, value);
   DEBUG << clade.str() << "\t" << get_subclades(clade).size() << endl;
   return value;
 }
 
 
-void TripartitionScorer::set_score(size_t clade_index, double score, Clade& a1, Clade& a2) {
-  subclades[clade_index].clear();
+void TripartitionScorer::set_score(size_t clade_index, double score) {
+  //subclades[clade_index].clear();
   scores[clade_index] = score;
   finished[clade_index] = 1;
-  if (a1.get_taxa().ffs() < a2.get_taxa().ffs())
-    subclades[clade_index].push_back(make_pair(a1.get_taxa(), a2.get_taxa()));
+  //if (a1.get_taxa().ffs() < a2.get_taxa().ffs())
+  //  subclades[clade_index].push_back(make_pair(a1.get_taxa(), a2.get_taxa()));
   
-  if (score_mat) {
-    (*score_mat)[clade_index][clade_indices[a1.get_taxa()]] = score;
-    (*score_mat)[clade_index][clade_indices[a2.get_taxa()]] = score;
-  }  
+  //if (score_mat) {
+  //  (*score_mat)[clade_index][clade_indices[a1.get_taxa()]] = score;
+  //  (*score_mat)[clade_index][clade_indices[a2.get_taxa()]] = score;
+  //}  
 
 }
 
@@ -143,7 +162,13 @@ void TripartitionScorer::init(Config& conf) {
   for (size_t i = 0; i < clades.size(); i++) {
     finished[i] = 0;
   }
-  
+ 
+  //make changes here -  a subclade array for each thread 
+  int num_threads = omp_get_max_threads();
+  per_thread_subclades.resize(num_threads);
+  for (size_t i = 0; i < num_threads; i++) {
+    per_thread_subclades[i].resize(clades.size());
+  }
   subclades.resize(clades.size());
 
 }

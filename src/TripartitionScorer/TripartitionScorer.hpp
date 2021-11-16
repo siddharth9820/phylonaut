@@ -73,12 +73,13 @@ private:
   unordered_map <clade_bitset, size_t> clade_indices;
   double get_score(int clade_index);
   double get_score(Clade& clade, int clade_index);
-  void set_score(size_t clade_index, double score, Clade& a1, Clade& a2); 
+  void set_score(size_t clade_index, double score); 
   
   vector <double> scores;
   vector <int> finished;
   vector <vector<pair<clade_bitset, clade_bitset> > > subclades;
-  
+  vector <vector<vector<pair<clade_bitset, clade_bitset> > > > per_thread_subclades; 
+
   twod_mat* score_mat;
 };
 
