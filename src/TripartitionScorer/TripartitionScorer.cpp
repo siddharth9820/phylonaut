@@ -45,13 +45,16 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
     
     return 0;
   }     
- 
-  int thread_num = omp_get_thread_num();
-  vector<double> per_thread_values(omp_get_max_threads());
-  #pragma omp parallel for reduction(min:value)  
+
+  int num_threads = omp_get_max_threads(); 
+  vector<double> per_thread_values(num_threads);
+  for(int i=0; i<num_threads; i++)
+  	per_thread_subclades[i].clear();
+
+  #pragma omp parallel for reduction(max:value)  
   for (size_t i = 0; i < clades.size(); i++) {
     Clade& subclade = clades[i];
-
+    int thread_num = omp_get_thread_num();
     if (subclade.size() >= clade.size() || subclade.size() == 0 || !clade.contains(subclade)  )
       continue;
     
@@ -69,21 +72,21 @@ double TripartitionScorer::get_score(Clade& clade, int clade_index) {
 
     if (current == value) {
       if (tp.a1.get_taxa().ffs() < tp.a2.get_taxa().ffs())
-	per_thread_subclades[thread_num][clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
+	per_thread_subclades[thread_num].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
     }
-    if (std::isnan(value) || better(current, value) ) { //probably the isnan does not matter now since openmp initializes value to DOUBLE_MAX
+    if (std::isnan(value) || better(current, value) ) { //probably the isnan does not matter now since openmp initializes value to DOUBLE_MIN
       value = current;
       per_thread_values[thread_num] = current;
       //set_score(clade_index, value, tp.a1, tp.a2);
-      per_thread_subclades[thread_num][clade_index].clear();
+      per_thread_subclades[thread_num].clear();
       if (tp.a1.get_taxa().ffs() < tp.a2.get_taxa().ffs())
-        per_thread_subclades[thread_num][clade_index].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
+        per_thread_subclades[thread_num].push_back(make_pair(tp.a1.get_taxa(), tp.a2.get_taxa()));
     }
   }
 
-  for(int i=0; i < omp_get_max_threads(); i++)  
+  for(int i=0; i < num_threads; i++)  
      if (per_thread_values[i] == value) 
-       subclades[clade_index].insert(subclades[clade_index].end(), per_thread_subclades[thread_num][clade_index].begin(), per_thread_subclades[thread_num][clade_index].end());  
+       subclades[clade_index].insert(subclades[clade_index].end(), per_thread_subclades[i].begin(), per_thread_subclades[i].end());  
   
   set_score(clade_index, value);
   DEBUG << clade.str() << "\t" << get_subclades(clade).size() << endl;
@@ -165,10 +168,7 @@ void TripartitionScorer::init(Config& conf) {
  
   //make changes here -  a subclade array for each thread 
   int num_threads = omp_get_max_threads();
-  per_thread_subclades.resize(num_threads);
-  for (size_t i = 0; i < num_threads; i++) {
-    per_thread_subclades[i].resize(clades.size());
-  }
+  per_thread_subclades.resize(num_threads, vector<pair<clade_bitset, clade_bitset> >());
   subclades.resize(clades.size());
 
 }

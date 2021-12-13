@@ -78,7 +78,7 @@ private:
   vector <double> scores;
   vector <int> finished;
   vector <vector<pair<clade_bitset, clade_bitset> > > subclades;
-  vector <vector<vector<pair<clade_bitset, clade_bitset> > > > per_thread_subclades; 
+  vector <vector<pair<clade_bitset, clade_bitset> > > per_thread_subclades; 
 
   twod_mat* score_mat;
 };
